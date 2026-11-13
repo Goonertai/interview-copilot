@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import {instructions, validateInput} from '../../../lib/answer';
+import {buildInstructions, validateInput} from '../../../lib/answer';
 import {getApiKey} from '../../../lib/server-config';
 export const runtime = 'nodejs';
 const loopbackHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
@@ -21,9 +21,9 @@ function isAllowedOrigin(request: Request) {
 }
 export async function POST(request: Request) {
   if (!isAllowedOrigin(request)) return Response.json({error: 'Cross-origin request denied. Open the app at http://127.0.0.1:3000 (or the port shown in your terminal) and retry.'}, {status: 403});
-  if (Number(request.headers.get('content-length') || 0) > 220000) return Response.json({error: 'Request too large.'}, {status: 413});
+  if (Number(request.headers.get('content-length') || 0) > 360000) return Response.json({error: 'Request too large.'}, {status: 413});
   let input;
-  try {const raw = await request.text(); if(raw.length > 60000) throw new Error('Request too large.'); input = validateInput(JSON.parse(raw));}
+  try {const raw = await request.text(); if(raw.length > 90000) throw new Error('Request too large.'); input = validateInput(JSON.parse(raw));}
   catch(e) {return Response.json({error: e instanceof Error ? e.message : 'Invalid request.'}, {status: 400});}
   let apiKey: string;
   try {apiKey = getApiKey();}
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   const abort = new AbortController();
   request.signal.addEventListener('abort', () => abort.abort(), {once: true});
   try {
-    const upstream = await client.responses.create({model: process.env.OPENAI_MODEL || 'gpt-4.1-mini', instructions, input: JSON.stringify(input), max_output_tokens: 600, store: false, stream: true}, {signal: abort.signal});
+    const upstream = await client.responses.create({model: process.env.OPENAI_MODEL || 'gpt-4.1-mini', instructions: buildInstructions(input), input: JSON.stringify(input), max_output_tokens: 600, store: false, stream: true}, {signal: abort.signal});
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {

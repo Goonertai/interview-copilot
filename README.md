@@ -16,6 +16,13 @@ npm run dev
 Set `OPENAI_API_KEY` to your own API key in `.env.local`. API billing is separate from ChatGPT subscriptions. `OPENAI_MODEL` is configurable, default `gpt-4.1-mini`. Never put the key in source code, a browser field or GitHub. Open **http://localhost:3000** in desktop Google Chrome. The server binds only to loopback. For production build locally: `npm run build`, then `npm start`.
 
 1. Paste resume/project notes or load a UTF-8 `.txt` file.
+   Optionally enter a target role/company and paste a JD or attach its UTF-8 TXT file
+   (up to 80 KB / 20,000 characters). You can edit or remove the loaded JD.
+   In Suggested Answer choose an IELTS level from 5 to 9 in half-band steps
+   (default 6.5), and Natural, Professional, Conversational, Concise or STAR style.
+   These preferences apply the next time you generate; they do not rewrite an existing answer.
+   IELTS is a vocabulary/sentence-complexity preference, not a score prediction.
+   Role and JD guide relevance but are never treated as evidence of your experience.
 2. Click **Start Listening** and allow the microphone.
 3. Play the English question through computer A's speakers.
 4. Review/edit **Live Transcript**, click **Generate Answer**. Interim speech is included at click time.
