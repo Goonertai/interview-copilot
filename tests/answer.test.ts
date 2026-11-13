@@ -1,0 +1,19 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {validateInput} from '../lib/answer';
+import {POST} from '../app/api/answer/route';
+test('validates and trims input',()=>assert.deepEqual(validateInput({question:' hello ',background:' resume '}),{question:'hello',background:'resume'}));
+test('rejects missing, malformed and oversized input',()=>{for(const x of [null,{}, {question:1,background:'b'},{question:' ',background:'b'},{question:'q',background:''},{question:'q'.repeat(12001),background:'b'},{question:'q',background:'b'.repeat(40001)}])assert.throws(()=>validateInput(x));});
+test('API rejects cross-origin and malformed requests before generation',async()=>{assert.equal((await POST(new Request('http://localhost/api/answer',{method:'POST',headers:{origin:'https://example.com'},body:'{}'}))).status,403);assert.equal((await POST(new Request('http://localhost/api/answer',{method:'POST',body:'bad'}))).status,400);});
+test('API explains missing server key',async()=>{const key=process.env.OPENAI_API_KEY;delete process.env.OPENAI_API_KEY;try{const response=await POST(new Request('http://localhost/api/answer',{method:'POST',body:JSON.stringify({question:'q',background:'b'})}));assert.equal(response.status,503);}finally{if(key)process.env.OPENAI_API_KEY=key;}});
+test('streams answer deltas and completion from mocked OpenAI',async()=>{
+ const original=globalThis.fetch, key=process.env.OPENAI_API_KEY;process.env.OPENAI_API_KEY='test-only';
+ let sent:any;
+ globalThis.fetch=async(_url,init)=>{sent=JSON.parse(init?.body as string);return new Response([
+  {type:'response.output_text.delta',delta:'Hello '},
+  {type:'response.output_text.delta',delta:'world.'},
+  {type:'response.completed',response:{id:'resp_test',status:'completed'}}
+ ].map(event=>'data: '+JSON.stringify(event)+'\n\n').join(''),{headers:{'Content-Type':'text/event-stream'}});};
+ try{const response=await POST(new Request('http://localhost/api/answer',{method:'POST',body:JSON.stringify({question:'Introduce yourself',background:'Software developer'})}));assert.equal(response.status,200);const events=(await response.text()).trim().split('\n').map(line=>JSON.parse(line));assert.equal(events.filter(e=>e.delta).map(e=>e.delta).join(''),'Hello world.');assert.equal(events.at(-1).done,true);assert.equal(sent.store,false);assert.equal(sent.stream,true);assert.match(sent.input,/Software developer/);}
+ finally{globalThis.fetch=original;if(key)process.env.OPENAI_API_KEY=key;else delete process.env.OPENAI_API_KEY;}
+});
