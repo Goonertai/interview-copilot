@@ -26,6 +26,16 @@ Keep the tab open and awake. Continuous recognition may disconnect; automatic re
 
 ## Verification
 
+### API key configuration troubleshooting
+
+Run `npm run doctor` in the folder containing `package.json`. It checks configuration
+without displaying the key or making a paid API call. The filename must be exactly
+`.env.local`, not `.env.local.txt` or `.env local`. Save it as UTF-8 with
+`OPENAI_API_KEY=your-key` on one line; pasting the key alone is insufficient.
+The answer endpoint now reads this file as a fallback when its process has no key,
+so saving a missing key does not require a restart. Existing non-empty environment
+variables take precedence; restart after changing a key already loaded by Next.js.
+
 If Generate Answer reports `Cross-origin request denied`, update to the latest source,
 restart the server, and open **http://127.0.0.1:3000** in Chrome (use the port shown
 in the terminal if 3000 is occupied). The API accepts localhost/127.0.0.1/IPv6

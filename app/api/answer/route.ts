@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import {instructions, validateInput} from '../../../lib/answer';
+import {getApiKey} from '../../../lib/server-config';
 export const runtime = 'nodejs';
 const loopbackHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
 function isAllowedOrigin(request: Request) {
@@ -24,8 +25,10 @@ export async function POST(request: Request) {
   let input;
   try {const raw = await request.text(); if(raw.length > 60000) throw new Error('Request too large.'); input = validateInput(JSON.parse(raw));}
   catch(e) {return Response.json({error: e instanceof Error ? e.message : 'Invalid request.'}, {status: 400});}
-  if (!process.env.OPENAI_API_KEY) return Response.json({error: 'Set OPENAI_API_KEY in .env.local, then restart the app.'}, {status: 503});
-  const client = new OpenAI({apiKey: process.env.OPENAI_API_KEY, timeout: 45000, maxRetries: 0});
+  let apiKey: string;
+  try {apiKey = getApiKey();}
+  catch(e) {return Response.json({error: e instanceof Error ? e.message : 'Check .env.local configuration.'}, {status: 503});}
+  const client = new OpenAI({apiKey, timeout: 45000, maxRetries: 0});
   const abort = new AbortController();
   request.signal.addEventListener('abort', () => abort.abort(), {once: true});
   try {
