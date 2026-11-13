@@ -15,7 +15,7 @@ npm run dev
 
 Set `OPENAI_API_KEY` to your own API key in `.env.local`. API billing is separate from ChatGPT subscriptions. `OPENAI_MODEL` is configurable, default `gpt-4.1-mini`. Never put the key in source code, a browser field or GitHub. Open **http://localhost:3000** in desktop Google Chrome. The server binds only to loopback. For production build locally: `npm run build`, then `npm start`.
 
-1. Paste resume/project notes or load a UTF-8 `.txt` file.
+1. Paste resume/project notes or load a UTF-8 `.txt` file. Background text is automatically saved in this browser and restored on refresh or reopening. Edits also auto-save. Use **Clear saved background** to remove it. Use the same browser profile, address and port (localhost and 127.0.0.1 have separate browser storage). Clearing browser data or using private mode may remove the saved background. Role, JD, answer preferences, questions and answers remain session-only.
    Optionally enter a target role/company and paste a JD or attach its UTF-8 TXT file
    (up to 80 KB / 20,000 characters). You can edit or remove the loaded JD.
    In Suggested Answer choose an IELTS level from 5 to 9 in half-band steps
@@ -29,7 +29,7 @@ Set `OPENAI_API_KEY` to your own API key in `.env.local`. API billing is separat
 5. Click **Next Question** when ready to discard the current question and answer; recognition reconnects automatically. This prevents your spoken answer from mixing into the next prompt. The app cannot distinguish speakers; clear the transcript after you finish speaking, before the next question.
 6. **Stop Listening** releases recognition; **Stop generating** cancels an answer.
 
-Keep the tab open and awake. Continuous recognition may disconnect; automatic reconnection uses backoff and stops after six consecutive failures. Permission/device errors require user intervention. If browser recognition is unavailable you can type questions. Chrome speech recognition may require internet and sends audio to its recognition provider; it is not guaranteed offline. The app itself does not record audio or persist your resume/transcript. On Generate, the question and resume are sent to OpenAI with `store:false`; provider data policies still apply. Use where assistance and recording are permitted.
+Keep the tab open and awake. Continuous recognition may disconnect; automatic reconnection uses backoff and stops after six consecutive failures. Permission/device errors require user intervention. If browser recognition is unavailable you can type questions. Chrome speech recognition may require internet and sends audio to its recognition provider; it is not guaranteed offline. The app does not record audio or persist transcripts. Background text is saved only in this browser’s localStorage, not on the server. If local saving fails, the page reports it and you can continue using the current background for this session. On Generate, the question and resume are sent to OpenAI with `store:false`; provider data policies still apply. Use where assistance and recording are permitted.
 
 ## Verification
 

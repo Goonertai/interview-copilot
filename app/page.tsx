@@ -4,13 +4,31 @@ import {answerStyles, type AnswerStyle} from '../lib/answer';
 type Result = {isFinal: boolean; [index: number]: {transcript: string}};
 type Recognition = {continuous: boolean; interimResults: boolean; lang: string; onstart: (()=>void)|null; onend: (()=>void)|null; onerror: ((e:{error:string})=>void)|null; onresult: ((e:{resultIndex:number; results: ArrayLike<Result>})=>void)|null; start():void; abort():void};
 type SpeechWindow = Window & {SpeechRecognition?:new()=>Recognition; webkitSpeechRecognition?:new()=>Recognition};
+const backgroundStorageKey = 'interview-copilot.background.v1';
 export default function Home() {
  const [background,setBackground]=useState(''), [question,setQuestion]=useState(''), [interim,setInterim]=useState(''), [answer,setAnswer]=useState('');
  const [targetRole,setTargetRole]=useState(''), [jobDescription,setJobDescription]=useState(''), [jdFilename,setJdFilename]=useState('');
  const [ieltsLevel,setIeltsLevel]=useState(6.5), [answerStyle,setAnswerStyle]=useState<AnswerStyle>('natural');
+ const [backgroundReady,setBackgroundReady]=useState(false), [backgroundSaveStatus,setBackgroundSaveStatus]=useState('Loading saved background…');
  const [status,setStatus]=useState('Ready'), [error,setError]=useState(''), [listening,setListening]=useState(false), [busy,setBusy]=useState(false), [supported,setSupported]=useState(true);
  const rec=useRef<Recognition|null>(null), wanted=useRef(false), timer=useRef<ReturnType<typeof setTimeout>|null>(null), generation=useRef<AbortController|null>(null), interimRef=useRef(''), attempts=useRef(0);
  useEffect(()=>{setSupported(Boolean((window as SpeechWindow).SpeechRecognition || (window as SpeechWindow).webkitSpeechRecognition));return ()=>{wanted.current=false;if(timer.current)clearTimeout(timer.current);rec.current?.abort();generation.current?.abort();};},[]);
+ useEffect(()=>{
+  try {
+   const saved=window.localStorage.getItem(backgroundStorageKey);
+   if(saved && saved.length<=40000)setBackground(saved);
+  } catch {setBackgroundSaveStatus('Cannot access browser storage. Background is available for this session only.');}
+  setBackgroundReady(true);
+ },[]);
+ useEffect(()=>{
+  // Wait for restore before writing; the initial empty state must not erase saved text.
+  if(!backgroundReady)return;
+  try {
+   if(background)window.localStorage.setItem(backgroundStorageKey,background);
+   else window.localStorage.removeItem(backgroundStorageKey);
+   setBackgroundSaveStatus(background?'Saved on this device · Auto-save on':'No background saved');
+  } catch {setBackgroundSaveStatus('Changes could not be saved. Browser storage may be blocked or full; any previous saved background may remain.');}
+ },[background,backgroundReady]);
  function stop(){wanted.current=false;if(timer.current)clearTimeout(timer.current);rec.current?.abort();setListening(false);setStatus('Paused');setInterim('');interimRef.current='';}
  function start(){
   if(wanted.current)return;
@@ -45,7 +63,7 @@ export default function Home() {
  return <main>
   <header><a className="brand" href="/">◉ <span>Interview Copilot</span></a><span className="badge">MVP</span></header>
   <section className="intro"><p className="eyebrow">YOUR INTERVIEW WORKSPACE</p><h1>Listen. Think. Answer.</h1><p>Capture the question. Shape an answer from your experience.</p></section>
-  <div className="workspace"><aside className="card background"><div className="card-heading"><span className="step">01</span><h2>Your background</h2></div><p className="muted">Paste your resume and project notes, or load a TXT file.</p><label className="upload">↑ Load TXT<input aria-label="Upload background TXT" type="file" accept=".txt,text/plain" onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}}/></label><label htmlFor="background" className="sr-only">Resume and background</label><textarea id="background" maxLength={40000} value={background} onChange={e=>setBackground(e.target.value)} placeholder="Your role, experience, projects, and achievements…"/><div className="footnote">{background.length.toLocaleString()} / 40,000 characters · Session only</div>
+  <div className="workspace"><aside className="card background"><div className="card-heading"><span className="step">01</span><h2>Your background</h2></div><p className="muted">Paste your resume and project notes, or load a TXT file. Automatically saved in this browser for next time.</p><label className="upload">↑ Load TXT<input aria-label="Upload background TXT" type="file" accept=".txt,text/plain" disabled={!backgroundReady} onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}}/></label><label htmlFor="background" className="sr-only">Resume and background</label><textarea id="background" maxLength={40000} value={background} disabled={!backgroundReady} onChange={e=>setBackground(e.target.value)} placeholder="Your role, experience, projects, and achievements…"/><div className="footnote">{background.length.toLocaleString()} / 40,000 characters</div><p className="footnote" role="status">{backgroundSaveStatus}</p><button className="text-button" disabled={!backgroundReady||!background||busy} onClick={()=>setBackground('')}>Clear saved background</button>
    <div className="job-context"><label className="field-label" htmlFor="target-role">Target role <span>目标岗位 · Optional</span></label><input id="target-role" type="text" maxLength={300} value={targetRole} disabled={busy} onChange={e=>setTargetRole(e.target.value)} placeholder="e.g. Backend Engineer · Stripe"/>
    <label className="field-label" htmlFor="job-description">Job description <span>JD · Optional</span></label><label className={'upload '+(busy?'disabled':'')}>↑ Attach JD · TXT<input aria-label="Upload JD TXT" type="file" accept=".txt,text/plain" disabled={busy} onChange={e=>{void uploadJD(e.target.files?.[0]);e.target.value='';}}/></label>
    {jdFilename&&<div className="attachment">{jdFilename}<button className="text-button" disabled={busy} onClick={()=>{setJobDescription('');setJdFilename('');}}>Remove JD</button></div>}
