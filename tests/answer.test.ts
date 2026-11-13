@@ -6,6 +6,24 @@ test('validates and trims input',()=>assert.deepEqual(validateInput({question:' 
 test('rejects missing, malformed and oversized input',()=>{for(const x of [null,{}, {question:1,background:'b'},{question:' ',background:'b'},{question:'q',background:''},{question:'q'.repeat(12001),background:'b'},{question:'q',background:'b'.repeat(40001)}])assert.throws(()=>validateInput(x));});
 test('API rejects cross-origin and malformed requests before generation',async()=>{assert.equal((await POST(new Request('http://localhost/api/answer',{method:'POST',headers:{origin:'https://example.com'},body:'{}'}))).status,403);assert.equal((await POST(new Request('http://localhost/api/answer',{method:'POST',body:'bad'}))).status,400);});
 test('API explains missing server key',async()=>{const key=process.env.OPENAI_API_KEY;delete process.env.OPENAI_API_KEY;try{const response=await POST(new Request('http://localhost/api/answer',{method:'POST',body:JSON.stringify({question:'q',background:'b'})}));assert.equal(response.status,503);}finally{if(key)process.env.OPENAI_API_KEY=key;}});
+test('accepts same-origin and local loopback aliases, including alternate ports',async()=>{
+ for(const [target,origin] of [
+  ['http://127.0.0.1:3000','http://localhost:3000'],
+  ['http://localhost:3000','http://127.0.0.1:3000'],
+  ['http://127.0.0.1:3001','http://localhost:3001'],
+  ['http://[::1]:3000','http://localhost:3000'],
+  ['http://127.0.0.1:3000','http://127.0.0.1:3000']
+ ]) {
+  // A malformed body reaches input validation only if the origin guard passes.
+  assert.equal((await POST(new Request(target+'/api/answer',{method:'POST',headers:{origin,'sec-fetch-site':'same-origin'},body:'bad'}))).status,400,origin);
+ }
+});
+test('still blocks foreign hosts, ports, schemes and malformed origins',async()=>{
+ for(const origin of ['https://example.com','http://localhost:3001','https://localhost:3000','http://localhost.evil.test:3000','null','bad','http://localhost:3000/path']) {
+  assert.equal((await POST(new Request('http://127.0.0.1:3000/api/answer',{method:'POST',headers:{origin},body:'bad'}))).status,403,origin);
+ }
+ assert.equal((await POST(new Request('http://127.0.0.1:3000/api/answer',{method:'POST',headers:{origin:'http://127.0.0.1:3000','sec-fetch-site':'cross-site'},body:'bad'}))).status,403);
+});
 test('streams answer deltas and completion from mocked OpenAI',async()=>{
  const original=globalThis.fetch, key=process.env.OPENAI_API_KEY;process.env.OPENAI_API_KEY='test-only';
  let sent:any;

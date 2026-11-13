@@ -26,6 +26,11 @@ Keep the tab open and awake. Continuous recognition may disconnect; automatic re
 
 ## Verification
 
+If Generate Answer reports `Cross-origin request denied`, update to the latest source,
+restart the server, and open **http://127.0.0.1:3000** in Chrome (use the port shown
+in the terminal if 3000 is occupied). The API accepts localhost/127.0.0.1/IPv6
+loopback aliases on the same protocol and port, while rejecting foreign origins.
+
 ```sh
 npm run typecheck
 npm test

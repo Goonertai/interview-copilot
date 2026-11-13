@@ -1,9 +1,25 @@
 import OpenAI from 'openai';
 import {instructions, validateInput} from '../../../lib/answer';
 export const runtime = 'nodejs';
-export async function POST(request: Request) {
+const loopbackHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
+function isAllowedOrigin(request: Request) {
+  // The local server can normalize localhost to its 127.0.0.1 bind address.
+  // Only treat loopback aliases as equivalent at the same protocol and port.
+  if (request.headers.get('sec-fetch-site') === 'cross-site') return false;
   const origin = request.headers.get('origin');
-  if (origin && origin !== new URL(request.url).origin) return Response.json({error: 'Cross-origin request denied.'}, {status: 403});
+  if (!origin) return true;
+  try {
+    const source = new URL(origin);
+    const target = new URL(request.url);
+    if (source.origin === 'null' || source.origin !== origin) return false;
+    return source.origin === target.origin || (
+      loopbackHosts.has(source.hostname) && loopbackHosts.has(target.hostname) &&
+      source.protocol === target.protocol && source.port === target.port
+    );
+  } catch {return false;}
+}
+export async function POST(request: Request) {
+  if (!isAllowedOrigin(request)) return Response.json({error: 'Cross-origin request denied. Open the app at http://127.0.0.1:3000 (or the port shown in your terminal) and retry.'}, {status: 403});
   if (Number(request.headers.get('content-length') || 0) > 220000) return Response.json({error: 'Request too large.'}, {status: 413});
   let input;
   try {const raw = await request.text(); if(raw.length > 60000) throw new Error('Request too large.'); input = validateInput(JSON.parse(raw));}
