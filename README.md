@@ -13,7 +13,7 @@ notepad .env.local
 npm run dev
 ```
 
-Set `OPENAI_API_KEY` to your own API key in `.env.local`. API billing is separate from ChatGPT subscriptions. `OPENAI_MODEL` is configurable, default `gpt-4.1-mini`. Never put the key in source code, a browser field or GitHub. Open **http://localhost:3000** in desktop Google Chrome. The server binds only to loopback. For production build locally: `npm run build`, then `npm start`.
+Set `OPENAI_API_KEY` to your own API key in `.env.local`. API billing is separate from ChatGPT subscriptions. Models are routed by question type: General Question uses `gpt-6-luna` with no reasoning; Coding and System Design use `gpt-6.1-sol` with medium reasoning. The legacy `OPENAI_MODEL` variable is ignored; an existing line can be removed. Your API project must have access to both models. No silent fallback to a different model is used. Never put the key in source code, a browser field or GitHub. Open **http://localhost:3000** in desktop Google Chrome. The server binds only to loopback. For production build locally: `npm run build`, then `npm start`.
 
 1. Paste resume/project notes or load a UTF-8 `.txt` file. Background text is automatically saved in this browser and restored on refresh or reopening. Edits also auto-save. Use **Clear saved background** to remove it. Use the same browser profile, address and port (localhost and 127.0.0.1 have separate browser storage). Clearing browser data or using private mode may remove the saved background. Role, JD, answer preferences, questions and answers remain session-only.
    Optionally enter a target role/company and paste a JD or attach its UTF-8 TXT file
@@ -25,7 +25,7 @@ Set `OPENAI_API_KEY` to your own API key in `.env.local`. API billing is separat
    Role and JD guide relevance but are never treated as evidence of your experience.
 2. Click **Start Listening** and allow the microphone.
 3. Play the English question through computer A's speakers.
-4. Review/edit **Live Transcript**, click **Generate Answer**. Interim speech is included at click time.
+4. Choose **General Question**, **Coding** or **System Design** in the question panel. Review/edit the transcript or paste a complete problem, then click **Generate Answer**. Interim speech is included at click time. Background is required only for General Question; technical modes work without a resume. Coding defaults to Python with Java, JavaScript, TypeScript, C++ and Go options. Mode, language and answer settings remain selected for the next question. Switching mode clears the old answer and retains the current question.
 5. Click **Next Question** when ready to discard the current question and answer; recognition reconnects automatically. This prevents your spoken answer from mixing into the next prompt. The app cannot distinguish speakers; clear the transcript after you finish speaking, before the next question.
 6. **Stop Listening** releases recognition; **Stop generating** cancels an answer.
 
@@ -52,12 +52,48 @@ loopback aliases on the same protocol and port, while rejecting foreign origins.
 npm run typecheck
 npm test
 npm run build
+npm run test:production
 ```
 
-GitHub Actions runs these on pushes and PRs. Automated tests validate input and API safeguards; API streaming is tested with mocked OpenAI events. Browser integration is not yet verified in this environment. Mock tests do not validate physical microphones, acoustic pickup, actual browser speech services, model quality or latency. Live API testing requires a configured paid API key. On computer B verify microphone permission, question pickup, stream latency, second-question isolation and stopping/reconnecting. This MVP is local only; do not expose its unauthenticated endpoint on a public server.
+GitHub Actions runs these on pushes and PRs. The production smoke test starts a local mock OpenAI endpoint, checks both model routes and all 14 design examples through HTTP, and verifies prompt/case files are included in production tracing. It uses no paid API calls. Automated tests validate input and API safeguards; API streaming is tested with mocked OpenAI events. Browser integration is not yet verified in this environment. Mock tests do not validate physical microphones, acoustic pickup, actual browser speech services, model quality or latency. Live API testing requires a configured paid API key. On computer B verify microphone permission, question pickup, stream latency, second-question isolation and stopping/reconnecting. This MVP is local only; do not expose its unauthenticated endpoint on a public server.
 
 ## Documentation
 
 - https://developers.openai.com/api/docs/guides/streaming-responses
 - https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/continuous
 - https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/end_event
+
+## Technical answer formats and case library
+
+- `prompts/coding-amazon.md` is injected into Coding requests. It covers clarification,
+  baseline, optimization, correctness/invariants, complete code, walkthrough/test
+  cases, complexity and follow-ups. It is an original practice framework informed
+  by Amazon's public preparation guidance, not an official Amazon scoring rubric.
+- `prompts/system-design.md` is injected into System Design requests. It covers
+  scope, explicit assumptions/estimates, APIs/data model, architecture/data flows,
+  deep dives, failures/operation and tradeoffs. Narrow follow-ups stay focused.
+- `knowledge/system-design/` contains 14 original worked practice examples plus a
+  manifest and source notes. Current-question keyword/alias matching selects at
+  most two examples, with a generic-framework fallback. This is local retrieval,
+  not embeddings or training. The model must validate relevance and adapt examples
+  to the current requirements, rather than copy an answer. Brand overlaps can
+  be misleading and indirect paraphrases can be missed. Topic coverage reflects
+  common teaching examples, not verified Amazon frequency rankings.
+- In System Design, expand **Practice case library** to load a sample question.
+  Reference patterns are previewed and the actual model/reference names appear
+  with generated answers. Coding responses display fenced code; design tables
+  and headings use a small safe Markdown renderer. Raw HTML is never interpreted.
+- IELTS and style apply to explanatory prose. Technical sections, correct code,
+  and design accuracy take priority over a short/STAR style preference.
+- Technical modes reserve up to 25,000 output tokens including reasoning; visible
+  content is guided by the format, not forced to use the full budget. General
+  reserves 900. SDK request timeout is 180 seconds. Longer technical responses
+  can cost more and take longer to show their first visible text. Incomplete
+  responses keep partial text and report budget exhaustion rather than success.
+- No code execution, automatic correctness guarantee or multi-turn interview
+  memory is provided. Paste relevant earlier design decisions with a follow-up.
+  All regression API tests mock OpenAI; real model quality, latency and access
+  must be checked with your API project. Never paste an API key into the question.
+
+Source files are traced into production output via `next.config.ts`. Restart or
+rebuild after editing prompt/case Markdown. Model routing is in `lib/generation.ts`.

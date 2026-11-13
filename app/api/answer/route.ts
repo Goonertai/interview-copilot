@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
-import {buildInstructions, validateInput} from '../../../lib/answer';
+import {validateInput} from '../../../lib/answer';
+import {buildGenerationPlan} from '../../../lib/generation';
 import {getApiKey} from '../../../lib/server-config';
 export const runtime = 'nodejs';
 const loopbackHosts = new Set(['localhost', '127.0.0.1', '[::1]']);
@@ -28,25 +29,29 @@ export async function POST(request: Request) {
   let apiKey: string;
   try {apiKey = getApiKey();}
   catch(e) {return Response.json({error: e instanceof Error ? e.message : 'Check .env.local configuration.'}, {status: 503});}
-  const client = new OpenAI({apiKey, timeout: 45000, maxRetries: 0});
+  const client = new OpenAI({apiKey, timeout: 180000, maxRetries: 0});
   const abort = new AbortController();
   request.signal.addEventListener('abort', () => abort.abort(), {once: true});
+  if(request.signal.aborted)abort.abort();
   try {
-    const upstream = await client.responses.create({model: process.env.OPENAI_MODEL || 'gpt-4.1-mini', instructions: buildInstructions(input), input: JSON.stringify(input), max_output_tokens: 600, store: false, stream: true}, {signal: abort.signal});
+    const {metadata,...plan} = buildGenerationPlan(input);
+    const upstream = await client.responses.create({...plan, store: false, stream: true}, {signal: abort.signal});
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         const send = (data: object) => controller.enqueue(encoder.encode(JSON.stringify(data) + '\n'));
         try {
+          send({metadata});
           let completed = false;
           for await (const event of upstream) {
             if(event.type === 'response.output_text.delta') send({delta: event.delta});
-            if(event.type === 'error' || event.type === 'response.failed' || event.type === 'response.incomplete') throw new Error('Generation interrupted. Please retry.');
+            if(event.type === 'response.incomplete') throw new Error(event.response.incomplete_details?.reason === 'max_output_tokens' ? 'The answer reached its reasoning/output budget. Try a narrower question. Any partial answer is shown above.' : 'Generation incomplete. Any partial answer is shown above. Please retry.');
+            if(event.type === 'error' || event.type === 'response.failed') throw new Error('Generation interrupted. Any partial answer is shown above. Please retry.');
             if(event.type === 'response.completed') completed = true;
           }
           if(!completed) throw new Error('Generation interrupted. Please retry.');
           send({done: true});
-        } catch {if (!abort.signal.aborted) send({error: 'Generation interrupted. Please retry.'});}
+        } catch(e) {if (!abort.signal.aborted) send({error: e instanceof Error ? e.message : 'Generation interrupted. Please retry.'});}
         finally {controller.close();}
       },
       cancel() {abort.abort();}
@@ -54,6 +59,6 @@ export async function POST(request: Request) {
     return new Response(stream, {headers: {'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store', 'X-Accel-Buffering':'no'}});
   } catch(e) {
     const status = e instanceof OpenAI.APIError ? e.status : undefined;
-    return Response.json({error: status === 401 ? 'API key rejected. Check .env.local.' : status === 429 ? 'API quota or rate limit reached. Check billing or retry later.' : 'Could not reach OpenAI. Check your connection and model configuration.'}, {status: 502});
+    return Response.json({error: status === 401 ? 'API key rejected. Check .env.local.' : status === 429 ? 'API quota or rate limit reached. Check billing or retry later.' : status === 403 || status === 404 ? 'Your API project cannot access the model for this mode. Check model access: General uses gpt-6-luna; Coding and System Design use gpt-6.1-sol.' : 'Could not reach OpenAI. Check your connection and model access.'}, {status: 502});
   }
 }

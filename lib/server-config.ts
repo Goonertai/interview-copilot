@@ -7,10 +7,11 @@ export function getApiKey(root = process.cwd(), env: Record<string, string | und
   const configured = env.OPENAI_API_KEY?.trim();
   if (configured) return configured;
 
-  const file = join(root, '.env.local');
+  // Runtime-only local configuration must never be copied into a production bundle.
+  const file = join(/*turbopackIgnore: true*/ root, '.env.local');
   if (!existsSync(file)) {
     for (const name of ['.env.local.txt', '.env local', 'env.local']) {
-      if (existsSync(join(root, name))) throw new Error(`Found ${name}. Rename it to exactly .env.local in the folder containing package.json, then retry.`);
+      if (existsSync(join(/*turbopackIgnore: true*/ root, name))) throw new Error(`Found ${name}. Rename it to exactly .env.local in the folder containing package.json, then retry.`);
     }
     throw new Error('No API key loaded. Create .env.local beside package.json (not inside app), add OPENAI_API_KEY=your-key, save, and retry.');
   }

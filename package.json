@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:production": "node scripts/smoke-production.mjs",
     "doctor": "node --import tsx scripts/doctor.ts",
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",

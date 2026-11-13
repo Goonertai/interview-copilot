@@ -1,0 +1,312 @@
+[
+  {
+    "id": "url-shortener",
+    "title": "URL shortener",
+    "aliases": [
+      "url shortener",
+      "url shortening",
+      "short url",
+      "short link",
+      "bitly",
+      "tinyurl",
+      "短链接",
+      "短网址",
+      "shorten links",
+      "shorten urls",
+      "短链"
+    ],
+    "concepts": [
+      "redirect",
+      "long url",
+      "short code",
+      "collision"
+    ],
+    "file": "url-shortener.md",
+    "sampleQuestion": "Design a URL shortening service with custom aliases and expiring links."
+  },
+  {
+    "id": "rate-limiter",
+    "title": "Distributed rate limiter",
+    "aliases": [
+      "rate limiter",
+      "rate limiting",
+      "token bucket",
+      "leaky bucket",
+      "throttling service",
+      "限流",
+      "限流器"
+    ],
+    "concepts": [
+      "quota",
+      "burst",
+      "requests per second",
+      "429"
+    ],
+    "file": "rate-limiter.md",
+    "sampleQuestion": "Design an API rate limiter across many gateway instances."
+  },
+  {
+    "id": "chat",
+    "title": "Messaging / chat",
+    "aliases": [
+      "chat system",
+      "chat app",
+      "messaging app",
+      "messaging service",
+      "whatsapp",
+      "messenger",
+      "聊天",
+      "即时通讯",
+      "微信",
+      "slack messaging"
+    ],
+    "concepts": [
+      "websocket",
+      "offline message",
+      "conversation",
+      "delivery receipt"
+    ],
+    "file": "chat.md",
+    "sampleQuestion": "Design a messaging service with small group chats and offline delivery."
+  },
+  {
+    "id": "news-feed",
+    "title": "News feed / social timeline",
+    "aliases": [
+      "news feed",
+      "newsfeed",
+      "social feed",
+      "activity feed",
+      "facebook feed",
+      "twitter timeline",
+      "信息流",
+      "动态流"
+    ],
+    "concepts": [
+      "followers",
+      "fanout",
+      "fan out",
+      "celebrity"
+    ],
+    "file": "news-feed.md",
+    "sampleQuestion": "Design a social news feed for users following other users."
+  },
+  {
+    "id": "file-storage",
+    "title": "File storage / synchronization",
+    "aliases": [
+      "file storage",
+      "file sharing",
+      "file sync",
+      "dropbox",
+      "google drive",
+      "文件存储",
+      "文件同步",
+      "网盘"
+    ],
+    "concepts": [
+      "chunk",
+      "upload",
+      "metadata",
+      "sync cursor"
+    ],
+    "file": "file-storage.md",
+    "sampleQuestion": "Design a file storage and synchronization service."
+  },
+  {
+    "id": "video-streaming",
+    "title": "Video upload / streaming",
+    "aliases": [
+      "video streaming",
+      "video platform",
+      "video sharing",
+      "youtube",
+      "netflix",
+      "视频平台",
+      "视频流",
+      "视频点播",
+      "video upload",
+      "video playback",
+      "on demand video"
+    ],
+    "concepts": [
+      "transcode",
+      "playback",
+      "cdn",
+      "adaptive bitrate"
+    ],
+    "file": "video-streaming.md",
+    "sampleQuestion": "Design a video streaming service with uploads and on-demand playback."
+  },
+  {
+    "id": "notifications",
+    "title": "Notification delivery",
+    "aliases": [
+      "notification system",
+      "notification service",
+      "push notification",
+      "email delivery",
+      "sms delivery",
+      "通知系统",
+      "通知服务"
+    ],
+    "concepts": [
+      "provider",
+      "preference",
+      "unsubscribe",
+      "delivery retry"
+    ],
+    "file": "notifications.md",
+    "sampleQuestion": "Design a multichannel email, SMS and push notification service."
+  },
+  {
+    "id": "payments",
+    "title": "Payment processing / ledger",
+    "aliases": [
+      "payment system",
+      "payment processing",
+      "payment service",
+      "digital wallet",
+      "money transfer",
+      "bank transfer",
+      "支付系统",
+      "支付",
+      "转账",
+      "ledger"
+    ],
+    "concepts": [
+      "idempotency",
+      "reconciliation",
+      "balance",
+      "double entry"
+    ],
+    "file": "payments.md",
+    "sampleQuestion": "Design a payment service that prevents duplicate charges and supports reconciliation."
+  },
+  {
+    "id": "ticket-booking",
+    "title": "Ticket / inventory reservation",
+    "aliases": [
+      "ticket booking",
+      "ticket reservation",
+      "ticketmaster",
+      "seat booking",
+      "seat reservation",
+      "inventory reservation",
+      "flash sale",
+      "订票",
+      "抢票",
+      "秒杀"
+    ],
+    "concepts": [
+      "hold",
+      "oversell",
+      "inventory",
+      "checkout"
+    ],
+    "file": "ticket-booking.md",
+    "sampleQuestion": "Design a ticket booking system that cannot sell a seat twice."
+  },
+  {
+    "id": "autocomplete",
+    "title": "Search autocomplete",
+    "aliases": [
+      "autocomplete",
+      "typeahead",
+      "search suggestions",
+      "search suggestion",
+      "搜索建议",
+      "自动补全"
+    ],
+    "concepts": [
+      "prefix",
+      "trie",
+      "top k",
+      "keystroke"
+    ],
+    "file": "autocomplete.md",
+    "sampleQuestion": "Design search autocomplete with low-latency prefix suggestions."
+  },
+  {
+    "id": "web-crawler",
+    "title": "Distributed web crawler",
+    "aliases": [
+      "web crawler",
+      "web crawling",
+      "search crawler",
+      "website crawler",
+      "网络爬虫",
+      "网页爬虫"
+    ],
+    "concepts": [
+      "robots",
+      "frontier",
+      "crawl",
+      "canonical url"
+    ],
+    "file": "web-crawler.md",
+    "sampleQuestion": "Design a distributed web crawler that avoids overwhelming websites."
+  },
+  {
+    "id": "ride-hailing",
+    "title": "Ride hailing / dispatch",
+    "aliases": [
+      "ride hailing",
+      "ride sharing",
+      "ridesharing",
+      "uber",
+      "lyft",
+      "taxi dispatch",
+      "打车",
+      "网约车"
+    ],
+    "concepts": [
+      "driver location",
+      "nearby driver",
+      "dispatch",
+      "trip"
+    ],
+    "file": "ride-hailing.md",
+    "sampleQuestion": "Design a ride-hailing service that matches riders to nearby drivers."
+  },
+  {
+    "id": "distributed-cache",
+    "title": "Distributed cache",
+    "aliases": [
+      "distributed cache",
+      "cache cluster",
+      "redis cluster",
+      "memcached",
+      "分布式缓存"
+    ],
+    "concepts": [
+      "eviction",
+      "consistent hashing",
+      "hot key",
+      "cache invalidation"
+    ],
+    "file": "distributed-cache.md",
+    "sampleQuestion": "Design a distributed cache with in-memory key-value storage."
+  },
+  {
+    "id": "event-ingestion",
+    "title": "Transaction event ingestion",
+    "aliases": [
+      "transaction ingestion",
+      "event ingestion",
+      "ingestion pipeline",
+      "transaction pipeline",
+      "交易数据",
+      "交易流水",
+      "数据摄取"
+    ],
+    "concepts": [
+      "out of order",
+      "deduplication",
+      "replay",
+      "kafka"
+    ],
+    "file": "event-ingestion.md",
+    "sampleQuestion": "Design near-real-time transaction ingestion with duplicate and out-of-order events."
+  }
+]
