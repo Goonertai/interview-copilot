@@ -22,9 +22,9 @@ function isAllowedOrigin(request: Request) {
 }
 export async function POST(request: Request) {
   if (!isAllowedOrigin(request)) return Response.json({error: 'Cross-origin request denied. Open the app at http://127.0.0.1:3000 (or the port shown in your terminal) and retry.'}, {status: 403});
-  if (Number(request.headers.get('content-length') || 0) > 360000) return Response.json({error: 'Request too large.'}, {status: 413});
+  if (Number(request.headers.get('content-length') || 0) > 1040000) return Response.json({error: 'Request too large.'}, {status: 413});
   let input;
-  try {const raw = await request.text(); if(raw.length > 90000) throw new Error('Request too large.'); input = validateInput(JSON.parse(raw));}
+  try {const raw = await request.text(); if(raw.length > 260000) throw new Error('Request too large.'); input = validateInput(JSON.parse(raw));}
   catch(e) {return Response.json({error: e instanceof Error ? e.message : 'Invalid request.'}, {status: 400});}
   let apiKey: string;
   try {apiKey = getApiKey();}

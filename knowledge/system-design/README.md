@@ -5,8 +5,8 @@ practice patterns. They are not a statistical ranking of Amazon interview
 frequency, copied course solutions, or descriptions of proprietary architectures.
 
 `index.json` defines aliases, concepts and one sample question for each Markdown
-case. Retrieval uses only the current question (never the candidate background
-or JD), selects at most two relevant examples, and falls back to the general
+case. Retrieval uses the current question and the topic’s original question (never
+the candidate background, generated answers or JD), selects at most two relevant examples, and falls back to the general
 framework when there is no match. The model must check relevance and adapt all
 requirements and assumptions. Keyword matching can miss indirect paraphrases.
 

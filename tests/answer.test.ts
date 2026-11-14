@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {validateInput, buildInstructions} from '../lib/answer';
 import {POST} from '../app/api/answer/route';
-test('validates and trims input with backward-compatible answer defaults',()=>assert.deepEqual(validateInput({question:' hello ',background:' resume '}),{question:'hello',background:'resume',targetRole:'',jobDescription:'',ieltsLevel:6.5,answerStyle:'natural',questionType:'general',codingLanguage:'Python'}));
+test('validates and trims input with backward-compatible answer defaults',()=>assert.deepEqual(validateInput({question:' hello ',background:' resume '}),{question:'hello',background:'resume',targetRole:'',jobDescription:'',ieltsLevel:6.5,answerStyle:'natural',questionType:'general',codingLanguage:'Python',history:[]}));
 test('validates optional role, JD, language level and style',()=>{
  const base={question:'q',background:'b'};
  const input=validateInput({...base,targetRole:' Backend Engineer ',jobDescription:' Kafka and SQL ',ieltsLevel:5,answerStyle:'concise'});

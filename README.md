@@ -26,8 +26,10 @@ Set `OPENAI_API_KEY` to your own API key in `.env.local`. API billing is separat
 2. Click **Start Listening** and allow the microphone.
 3. Play the English question through computer A's speakers.
 4. Choose **General Question**, **Coding** or **System Design** in the question panel. Review/edit the transcript or paste a complete problem, then click **Generate Answer**. Interim speech is included at click time. Background is required only for General Question; technical modes work without a resume. Coding defaults to Python with Java, JavaScript, TypeScript, C++ and Go options. Mode, language and answer settings remain selected for the next question. Switching mode clears the old answer and retains the current question.
-5. Click **Next Question** when ready to discard the current question and answer; recognition reconnects automatically. This prevents your spoken answer from mixing into the next prompt. The app cannot distinguish speakers; clear the transcript after you finish speaking, before the next question.
-6. **Stop Listening** releases recognition; **Stop generating** cancels an answer.
+5. Generate freezes the current question (including its interim transcript). Later microphone results go to a separate editable **Later audio** buffer and are never automatically included in a request. Review/remove your own speech there, then click **Use Buffer as Follow-up** to prepare the next question. Alternatively click **Capture Follow-up** for a blank question and begin speaking/typing the follow-up. Both keep this topic's completed question/answer history. Click Generate Answer to send the prepared follow-up with that history.
+6. **Edit / Retry** unlocks the frozen question for correction or regeneration, preserving history. **Discard Buffer** clears only later audio. The buffer holds up to 12,000 recent characters and cannot identify speakers.
+7. Click **Next Question** to cancel any ongoing generation and clear the current topic: history, question, answer and buffer. Recognition resumes into the fresh question. Background, role, JD and preferences remain available. Mode changes preserve history; library samples are disabled after a topic has begun.
+8. **Stop Listening** releases recognition; **Stop generating** cancels an answer. Failed or cancelled answers are not recorded as completed history.
 
 Keep the tab open and awake. Continuous recognition may disconnect; automatic reconnection uses backoff and stops after six consecutive failures. Permission/device errors require user intervention. If browser recognition is unavailable you can type questions. Chrome speech recognition may require internet and sends audio to its recognition provider; it is not guaranteed offline. The app does not record audio or persist transcripts. Background text is saved only in this browser’s localStorage, not on the server. If local saving fails, the page reports it and you can continue using the current background for this session. On Generate, the question and resume are sent to OpenAI with `store:false`; provider data policies still apply. Use where assistance and recording are permitted.
 
@@ -73,7 +75,7 @@ GitHub Actions runs these on pushes and PRs. The production smoke test starts a 
   scope, explicit assumptions/estimates, APIs/data model, architecture/data flows,
   deep dives, failures/operation and tradeoffs. Narrow follow-ups stay focused.
 - `knowledge/system-design/` contains 14 original worked practice examples plus a
-  manifest and source notes. Current-question keyword/alias matching selects at
+  manifest and source notes. Keyword/alias matching on the current question plus the original question of this topic selects at
   most two examples, with a generic-framework fallback. This is local retrieval,
   not embeddings or training. The model must validate relevance and adapt examples
   to the current requirements, rather than copy an answer. Brand overlaps can
@@ -90,10 +92,38 @@ GitHub Actions runs these on pushes and PRs. The production smoke test starts a 
   reserves 900. SDK request timeout is 180 seconds. Longer technical responses
   can cost more and take longer to show their first visible text. Incomplete
   responses keep partial text and report budget exhaustion rather than success.
-- No code execution, automatic correctness guarantee or multi-turn interview
-  memory is provided. Paste relevant earlier design decisions with a follow-up.
+- No code execution or automatic correctness guarantee is provided. Same-topic
+  follow-ups receive prior completed questions and suggested answers. These are
+  suggestions, not a transcript of what the candidate actually said.
   All regression API tests mock OpenAI; real model quality, latency and access
   must be checked with your API project. Never paste an API key into the question.
 
 Source files are traced into production output via `next.config.ts`. Restart or
 rebuild after editing prompt/case Markdown. Model routing is in `lib/generation.ts`.
+
+## Same-topic context and frozen transcription
+
+Completed turns are held in memory in this tab and sent explicitly with the next
+request (no database or provider-side conversation storage). Refreshing/closing
+the tab clears the topic; locally saved background is separate. Next Question is
+the only in-page operation that clears this history. A topic supports 12 completed
+answers and a 120,000-character context budget; reaching the limit pauses new
+generation rather than silently dropping earlier turns. History increases input
+usage and therefore can increase cost.
+
+The question freezes before recognition restarts at a clean boundary. Old
+recognizer callbacks are detached and identity-checked so late results cannot
+pollute a follow-up or new topic. New audio stays in the editable buffer after
+an answer completes, until you explicitly prepare a follow-up or start a new
+topic. Capture Follow-up discards the old buffer and starts a blank draft; Use
+Buffer as Follow-up copies reviewed buffer text into the draft. Neither button
+sends a request. Next Question also aborts any active answer, and late results
+from the previous generation cannot replace the new topic. Only successful,
+non-empty completed answers enter history; partial/failed answers remain visible
+but are excluded. Regenerating with Edit / Retry adds another completed turn.
+
+Regression tests cover freezing, interim/final speech separation, buffer editing,
+explicit promotion, context validation, root-case retrieval, reset and late-turn
+rejection. Production HTTP smoke tests also verify follow-up history reaches the
+mock upstream. Browser speech services and physical microphones require a local
+Chrome check; the tests do not establish real speech accuracy or model quality.

@@ -13,7 +13,8 @@ function readDocument(kind: 'prompt' | 'case', filename: string) {
 
 export function buildGenerationPlan(input: AnswerInput) {
   const technical = input.questionType !== 'general';
-  const references = input.questionType === 'system_design' ? matchSystemDesignCases(input.question) : [];
+  const retrievalQuestion=[input.history[0]?.question,input.question].filter(Boolean).join('\n');
+  const references = input.questionType === 'system_design' ? matchSystemDesignCases(retrievalQuestion) : [];
   const format = input.questionType === 'coding' ? readDocument('prompt','coding-amazon.md')
     : input.questionType === 'system_design' ? readDocument('prompt','system-design.md') : '';
   return {

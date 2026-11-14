@@ -50,10 +50,14 @@ try {
     assert.equal(sent.model,'gpt-6.1-sol');assert.equal(metadata.references[0].id,entry.id);
     assert.match(JSON.parse(sent.input).referenceCases[0].example,/Example architecture and data flow/);
   }
+  const history=[{question:'Design a payment system',answer:'Use stable idempotency keys and an auditable ledger.'}];
+  const followup=await generate({question:'How do we recover after a timeout?',questionType:'system_design',history});
+  assert.deepEqual(JSON.parse(sent.input).history,history);assert.equal(followup.references[0].id,'payments');
+  assert.match(sent.instructions,/earlier questions and completed suggested answers/);
   const traced=JSON.parse(readFileSync('.next/server/app/api/answer/route.js.nft.json','utf8')).files;
   for(const entry of cases)assert.ok(traced.some(file=>file.endsWith('knowledge/system-design/'+entry.file)),entry.id+' traced');
   assert.ok(!traced.some(file=>/(^|\/)\.env\.local$/.test(file)));
-  console.log(`PASS: production HTTP, both model routes, Coding template, all ${cases.length} design examples and production file tracing. No paid API calls.`);
+  console.log(`PASS: production HTTP, both model routes, Coding template, all ${cases.length} design examples, same-topic follow-up history and production file tracing. No paid API calls.`);
 } finally {
   if(app && app.exitCode===null){app.kill();await once(app,'exit');}
   upstream.closeAllConnections();await new Promise(resolve=>upstream.close(resolve));
